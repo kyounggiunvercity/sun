@@ -33,11 +33,11 @@ class _AutocompleteLocationState extends State<AutocompleteLocation> {
   }
 
   void _checkGPSAvailability() async {
-    GeolocationStatus geolocationStatus =
-    await Geolocator().checkGeolocationPermissionStatus();
+    LocationPermission geolocationStatus =
+    await Geolocator.checkPermission();
     print(geolocationStatus);
 
-    if (geolocationStatus != GeolocationStatus.granted) {
+    if (geolocationStatus == LocationPermission.denied) {
       showDialog(
         barrierDismissible: false,
         context: context,
@@ -65,7 +65,7 @@ class _AutocompleteLocationState extends State<AutocompleteLocation> {
   }
 
   Future<void> _getGPSLocation() async {
-    position = await Geolocator().getCurrentPosition();
+    position = await Geolocator.getCurrentPosition();
     print('latitude: ${position.latitude}, longitude: ${position.longitude}');
   }
 
@@ -97,7 +97,7 @@ class _AutocompleteLocationState extends State<AutocompleteLocation> {
     myAddr = await GoogleMapServices.getAddrFromLocation(
         position.latitude, position.longitude);
 
-    distance = await Geolocator().distanceBetween(position.latitude,
+    distance = await Geolocator.distanceBetween(position.latitude,
         position.longitude, placeDetail.lat, placeDetail.lng);
 
     setState(() {

@@ -18,7 +18,7 @@ class GoogleMapServices {
 
     print('Autocomplete(sessionToken): $sessionToken');
 
-    final http.Response response = await http.get(url);
+    final http.Response response = await http.get(Uri.parse(url));
     final responseData = json.decode(response.body);
     final predictions = responseData['predictions'];
 
@@ -39,7 +39,7 @@ class GoogleMapServices {
         '$baseUrl?key=$API_KEY&place_id=$placeId&language=ko&sessiontoken=$token';
 
     print('Place Detail(sessionToken): $sessionToken');
-    final http.Response response = await http.get(url);
+    final http.Response response = await http.get(Uri.parse(url));
     final responseData = json.decode(response.body);
     final result = responseData['result'];
 
@@ -53,7 +53,7 @@ class GoogleMapServices {
     final String baseUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
     String url = '$baseUrl?latlng=$lat,$lng&key=$API_KEY&language=ko';
 
-    final http.Response response = await http.get(url);
+    final http.Response response = await http.get(Uri.parse(url));
     final responseData = json.decode(response.body);
     final formattedAddr = responseData['results'][0]['formatted_address'];
     print(formattedAddr);

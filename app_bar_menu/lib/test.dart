@@ -44,11 +44,11 @@ class _MapTotalState extends State<MapTotal> {
   }
 
   void _checkGPSAvailability() async {
-    GeolocationStatus geolocationStatus =
-    await Geolocator().checkGeolocationPermissionStatus();
+    LocationPermission geolocationStatus =
+    await Geolocator.checkPermission();
     print(geolocationStatus);
 
-    if (geolocationStatus != GeolocationStatus.granted) {
+    if (geolocationStatus == LocationPermission.denied) {
       showDialog(
         barrierDismissible: false,
         context: context,
@@ -76,7 +76,7 @@ class _MapTotalState extends State<MapTotal> {
   }
 
   Future<void> _getGPSLocation() async {
-    position = await Geolocator().getCurrentPosition();
+    position = await Geolocator.getCurrentPosition();
     print('latitude: ${position.latitude}, longitude: ${position.longitude}');
   }
 
@@ -108,7 +108,7 @@ class _MapTotalState extends State<MapTotal> {
     myAddr = await GoogleMapServices.getAddrFromLocation(
         position.latitude, position.longitude);
 
-    distance = await Geolocator().distanceBetween(position.latitude,
+    distance = await Geolocator.distanceBetween(position.latitude,
         position.longitude, placeDetail.lat, placeDetail.lng);
 
     setState(() {

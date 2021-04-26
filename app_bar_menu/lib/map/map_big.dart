@@ -25,7 +25,7 @@ class _BigMapState extends State<BigMap> {
   }
 
   _setInitialPostion() async {
-    position = await Geolocator().getCurrentPosition();
+    position = await Geolocator.getCurrentPosition();
     setState(() {});
   }
 
