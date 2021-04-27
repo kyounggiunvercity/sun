@@ -156,7 +156,7 @@ class _PickLocationState extends State<PickLocation> {
                       onPressed: _pickLocation,
                     ),
                     Text(
-                      '장소를 선택하려면 + 아이콘을 탭하세요',
+                   '장소를 선택하려면 + 아이콘을 탭하세요',
                     ),
                   ],
                 ),
