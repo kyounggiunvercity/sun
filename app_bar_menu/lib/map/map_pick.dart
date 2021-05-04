@@ -1,12 +1,15 @@
-import 'package:app_bar_menu/map/map_big.dart';
+
 import 'package:app_bar_menu/map/map_important_location.dart';
 import 'package:app_bar_menu/map_support/picked_locations_provider.dart';
 import 'package:app_bar_menu/map_support/google_map_service.dart';
+import 'package:app_bar_menu/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 
 import 'package:app_bar_menu/map_support/picked_location.dart';
 import 'package:provider/provider.dart';
+
+
 
 class PickLocation extends StatefulWidget {
   @override
@@ -50,7 +53,7 @@ class _PickLocationState extends State<PickLocation> {
   _pickLocation() async {
     pickedLoc = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (ctx) => BigMap(),
+        builder: (ctx) => Total(),
         fullscreenDialog: true,
       ),
     );
@@ -76,9 +79,9 @@ class _PickLocationState extends State<PickLocation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFecec1c),
+      backgroundColor: Colors.brown,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFecec1c),
+        backgroundColor: Colors.brown,
         title: Text('찜할 집을 찾으시오',
             style: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -101,6 +104,7 @@ class _PickLocationState extends State<PickLocation> {
                     style: TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
+                      color: Colors.deepOrange
                     ),
                   ),
                   SizedBox(height: 20.0),

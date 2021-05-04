@@ -169,6 +169,7 @@ class _PlaceAutocompleteState extends State<PlaceAutocomplete> {
                     _controller.complete(controller);
                   },
                   myLocationEnabled: true,
+                  zoomGesturesEnabled: true,
                   markers: _markers,
                 ),
               ),

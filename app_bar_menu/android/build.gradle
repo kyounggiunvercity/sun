@@ -8,6 +8,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:4.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.maps.android:maps-utils-ktx:2.4.0'
     }
 }
 
@@ -29,3 +30,4 @@ subprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+

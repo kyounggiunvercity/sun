@@ -6,7 +6,7 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:app_bar_menu/map_support/google_map_service.dart';
-import 'package:app_bar_menu/map_support//place.dart';
+import 'package:app_bar_menu/map_support/place.dart';
 
 class AutocompleteLocation extends StatefulWidget {
   @override

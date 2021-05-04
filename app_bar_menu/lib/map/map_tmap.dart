@@ -7,6 +7,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
+import 'map_pick.dart';
+
 
 void main() => runApp(Tmap());
 
@@ -48,7 +50,8 @@ class _TmapState extends State<Tmap> {
       _markers.add(Marker(
         markerId: MarkerId('myInitialPostion'),
         position: LatLng(_latitude, _longtitude),
-        infoWindow: InfoWindow(title: '검색 위치', snippet: myAddr),
+
+        infoWindow: InfoWindow(title: '아파 위치', snippet: myAddr, ),
       ));
     });
   }
@@ -100,35 +103,34 @@ class _TmapState extends State<Tmap> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-          appBar: new AppBar(
-              centerTitle: true,
-              title: appBarTitle,
-              actions: <Widget>[
-                new IconButton(
-                  icon: actionIcon,
-                  onPressed: () {
-                    setState(() {
-                      if (this.actionIcon.icon == Icons.search) {
-                        this.actionIcon = new Icon(Icons.close);
-                        this.appBarTitle = new TextField(
-                          style: new TextStyle(
-                            color: Colors.white,
-                          ),
-                          onSubmitted: Mget(),
-                          decoration: new InputDecoration(
-                              prefixIcon:
-                              new Icon(Icons.search, color: Colors.white),
-                              hintText: "Search",
-                              hintStyle: new TextStyle(color: Colors.white)),
-                        );
-                      } else {
-                        this.actionIcon = new Icon(Icons.search);
-                        this.appBarTitle = new Text("AppBar Title");
-                      }
-                    });
-                  },
+          backgroundColor: Colors.brown,
+          appBar: AppBar(
+              title:    Text('1층, 반려동물, 등, 등',style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.yellow
+              ) ,),
+              leading: TextButton(
+                onPressed: (){
+                },
+                child:  SizedBox(
+                  height: 40,
+                  width: 40,
+                  child: Icon(Icons.arrow_back_rounded),
+
                 ),
-              ]),
+
+              ),
+              backgroundColor: Colors.brown,
+              actions:<Widget>[ IconButton(
+                icon: const Icon(Icons.star),
+                tooltip: 'favorite',
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => PickLocation()));
+
+                },
+              )]),
           body: Stack(
             children: <Widget>[
               _center == null
@@ -157,9 +159,14 @@ class _TmapState extends State<Tmap> {
                       onPressed: () {
                         stateStterSearch();
                       },
-                      label: Text('내 근처 약국'),
+                      label: Text('근처 아파트', style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.yellow
+                      ),),
                       elevation: 8,
-                      icon: Icon(Icons.gps_fixed_outlined),
+                      icon: Icon(Icons.gps_fixed_outlined,color: Colors.yellow,),
+                      backgroundColor: Colors.brown,
                     ),
                     SizedBox(
                       height: 10,
@@ -168,9 +175,14 @@ class _TmapState extends State<Tmap> {
                       onPressed: () {
                         stateStterPointSearch();
                       },
-                      label: Text('주변 약국'),
+                      label: Text('아파트'
+                          ,  style: TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 18,
+    color: Colors.yellow)),
                       elevation: 8,
-                      icon: Icon(Icons.map),
+                      icon: Icon(Icons.map, color: Colors.yellow,),
+                      backgroundColor: Colors.brown,
                     ),
                     SizedBox(
                       height: 30,
@@ -204,8 +216,9 @@ class _TmapState extends State<Tmap> {
 
     var _latitude = latitude;
     var _longtitude = longtitude;
+    var _places = '아파트';
     final String url =
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyBjJS0R3g8LUziS9ucwWHmgQr4wXJvIXio&location=$_latitude,$_longtitude&keyword=%EC%95%BD%EA%B5%AD&radius=500&language=ko';
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyBjJS0R3g8LUziS9ucwWHmgQr4wXJvIXio&location=$_latitude,$_longtitude&keyword=$_places&radius=500&language=ko';
 
     final response = await http.get(Uri.parse(url));
 
@@ -222,6 +235,7 @@ class _TmapState extends State<Tmap> {
           for (int i = 0; i < foundPlaces.length; i++) {
             _markers.add(
               Marker(
+
                 markerId: MarkerId(foundPlaces[i]['place_id']),
                 position: LatLng(
                   foundPlaces[i]['geometry']['location']['lat'],
@@ -245,13 +259,14 @@ class _TmapState extends State<Tmap> {
   void _pointSearch(dynamic latitude, dynamic longtitude) async {
     var _latitude = latitude;
     var _longtitude = longtitude;
+    var _places = '아파트';
     setState(() {
       loading = true;
       _markers.clear();
       _setMyLocation(_latitude, _longtitude);
     });
     final String url =
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyBjJS0R3g8LUziS9ucwWHmgQr4wXJvIXio&location=$_latitude,$_longtitude&keyword=%EC%95%BD%EA%B5%AD&radius=500&language=ko';
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyBjJS0R3g8LUziS9ucwWHmgQr4wXJvIXio&location=$_latitude,$_longtitude&keyword=$_places&radius=500&language=ko';
 
     final response = await http.get(Uri.parse(url));
 

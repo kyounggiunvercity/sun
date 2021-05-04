@@ -1,8 +1,11 @@
 import 'package:app_bar_menu/map_support/picked_location.dart';
 import 'package:app_bar_menu/map/map_pick.dart';
 import 'package:app_bar_menu/map_support/picked_locations_provider.dart';
+import 'package:app_bar_menu/test.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+
 
 class ImportantLocations extends StatefulWidget {
   @override
@@ -45,32 +48,37 @@ class _ImportantLocationsState extends State<ImportantLocations> {
 
   @override
   Widget build(BuildContext context) {
-    final locations =
-        Provider
-            .of<PickedLocationsProvider>(context)
-            .pickedLocations;
 
     return Scaffold(
+      backgroundColor: Colors.brown,
       appBar: AppBar(
-        title: Text('Important Locations'),
+        title: Text('Important Locations',style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Colors.yellow),),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.add,
+            color: Colors.yellow,),
             onPressed: () =>
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (ctx) => PickLocation(),
+                    builder: (ctx) => Total(),
                   ),
                 ),
           ),
         ],
+          backgroundColor: Colors.brown,
       ),
       body: isLoading
           ? Center(
         child: CircularProgressIndicator(),
       )
           : locations.length == 0
-          ? Center(child: Text('Add important locations'))
+          ? Center(child: Text('Add important locations',style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+          color: Colors.yellow)))
           : ListView.builder(
         itemCount: locations.length,
         itemBuilder: (BuildContext context, int index) {

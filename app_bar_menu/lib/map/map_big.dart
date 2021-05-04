@@ -4,7 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
-import 'package:app_bar_menu/map_support/google_map_service.dart';
+import 'package:app_bar_menu/map_support//google_map_service.dart';
 
 class BigMap extends StatefulWidget {
   @override
@@ -13,6 +13,7 @@ class BigMap extends StatefulWidget {
 
 class _BigMapState extends State<BigMap> {
   Position position;
+  LatLng _center;
   Completer<GoogleMapController> _controller = Completer();
   LatLng selectedLocation;
   bool loading = false;
@@ -22,6 +23,11 @@ class _BigMapState extends State<BigMap> {
   void initState() {
     super.initState();
     _setInitialPostion();
+  }
+
+  Future<Position> locateUser() async {
+    return Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
   }
 
   _setInitialPostion() async {
@@ -42,19 +48,11 @@ class _BigMapState extends State<BigMap> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-     appBar: AppBar(
-       backgroundColor: const Color(0xFFecec1c),
-        title: Text('찜할 집을 찾으시오',
-            style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.deepOrange
-        )),
+      appBar: AppBar(
+        title: Text('Choose from map'),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.check,
-              color: Colors.deepOrange,),
+            icon: Icon(Icons.check),
             onPressed: selectedLocation == null
                 ? null
                 : () => Navigator.of(context).pop({
