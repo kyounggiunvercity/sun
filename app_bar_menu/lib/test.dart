@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:app_bar_menu/map/map_important_location.dart';
 import 'package:app_bar_menu/map/map_pick.dart';
+import 'package:fluster/fluster.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -17,6 +18,8 @@ import 'package:app_bar_menu/map_support/place.dart';
 import 'package:http/http.dart' as http;
 import 'package:app_bar_menu/constants/constants.dart';
 import 'package:app_bar_menu/map_support/map_marker.dart';
+
+import 'map_support/map_marker_cluster.dart';
 
 
 
@@ -45,7 +48,7 @@ class _TotalState extends State<Total> {
   String selectedAddress;
 
   Uint8List markerIcon;
-  Uint8List markerIcons;
+
 
   final TextEditingController _searchController = TextEditingController();
   LatLng position;
@@ -81,6 +84,7 @@ class _TotalState extends State<Total> {
   void _setMyLocation(latitude, longtitude, Addr) {
     var _latitude = latitude;
     var _longtitude = longtitude;
+
     setState(() {
       _markers.add(Marker(
         markerId: MarkerId('myInitialPostion'),
@@ -99,7 +103,9 @@ class _TotalState extends State<Total> {
     super.initState();
     setCustomMarker('내 위치');
     getUserLocation();
+
   }
+
 
   void _onMapCreated(GoogleMapController controller) {
     _controller.complete(controller);
@@ -182,13 +188,14 @@ class _TotalState extends State<Total> {
                       onPressed: () {
                         stateStterSearch();
                       },
-                      label: Text('현재 위치의 아파트', style: TextStyle(
+
+                      label: Text('현 위치 아파트', style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                          fontSize: 15,
                           color: Colors.yellow
                       ),),
                       elevation: 8,
-                      icon: Icon(Icons.gps_fixed_outlined,color: Colors.yellow,),
+                      icon: Icon(Icons.gps_fixed_outlined,color: Colors.yellow,size: 20,),
                       backgroundColor: Colors.brown,
                     ),
                     SizedBox(
@@ -201,10 +208,10 @@ class _TotalState extends State<Total> {
                       label: Text('주변 아파트'
                           ,  style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: 15,
                               color: Colors.yellow)),
                       elevation: 8,
-                      icon: Icon(Icons.map, color: Colors.yellow,),
+                      icon: Icon(Icons.map, color: Colors.yellow,size: 20,),
                       backgroundColor: Colors.brown,
                     ),
                     SizedBox(
@@ -235,6 +242,7 @@ class _TotalState extends State<Total> {
       _markers.clear();
       getUserLocation();
       loading = true;
+
     });
 
     var _latitude = latitude;
@@ -253,6 +261,7 @@ class _TotalState extends State<Total> {
         controller.animateCamera(CameraUpdate.newLatLngZoom(_center, 16));
 
         setState(() {
+
           final foundPlaces = data['results'];
 
           for (int i = 0; i < foundPlaces.length; i++) {
@@ -382,5 +391,31 @@ void showAlertDialog(BuildContext context,_latitude, _longtitude) async {
 }
 
 
+final Fluster<MapMarker> fluster = Fluster<MapMarker>(
+  minZoom: minZoom, // The min zoom at clusters will show
+  maxZoom: maxZoom, // The max zoom at clusters will show
+  radius: 150, // Cluster radius in pixels
+  extent: 2048, // Tile extent. Radius is calculated with it.
+  nodeSize: 64, // Size of the KD-tree leaf node.
+  points: markers, // The list of markers created before
+  createCluster: ( // Create cluster marker
+      BaseCluster cluster,
+      double lng,
+      double lat,
+      ) => MapMarker(
+    id: cluster.id.toString(),
+    position: LatLng(lat, lng),
+    icon: clusterImage,
+    isCluster: cluster.isCluster,
+    clusterId: cluster.id,
+    pointsSize: cluster.pointsSize,
+    childMarkerId: cluster.childMarkerId,
+  ),
+);
+
+final List<Marker> googleMarkers = fluster
+    .clusters([-180, -85, 180, 85], currentZoom)
+    .map((cluster) => cluster.toMarker())
+    .toList()
 
 

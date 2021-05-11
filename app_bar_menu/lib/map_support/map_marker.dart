@@ -7,7 +7,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-Future<Uint8List> getBytesFromCanvas(int width, int height, addr) async {
+Future<Uint8List> getBytesFromCanvas(int width, int height,var addr) async {
   ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
   Canvas canvas = Canvas(pictureRecorder);
   Paint paint = Paint()..color = Colors.brown;
@@ -32,3 +32,4 @@ Future<Uint8List> getBytesFromCanvas(int width, int height, addr) async {
   final data = await img.toByteData(format: ui.ImageByteFormat.png);
   return data.buffer.asUint8List();
 }
+
