@@ -53,7 +53,7 @@ class _TotalState extends State<Total> {
   Uint8List markerIcon;
 
   LatLng position;
-
+/// 여기 부터 클러스터링 변수들
   bool _areMarkersLoading = true;
 
   double _currentZoom = 15;
@@ -65,7 +65,7 @@ class _TotalState extends State<Total> {
   final Color _clusterTextColor = Colors.deepOrange;
 
 
-
+/// 여기가 클러스터링 부분 함
   Future<void> _updateMarkers([double updatedZoom]) async {
     if (_clusterManager == null || updatedZoom == _currentZoom) return;
 
@@ -93,18 +93,19 @@ class _TotalState extends State<Total> {
       _areMarkersLoading = false;
     });
   }
+///수 여기 까지
 
 
   final tcontroller = TextEditingController();
   Widget appBarTitle = new Text("map");
   Icon actionIcon = new Icon(Icons.search);
 
-
+/// 사용자 위치 가져오기
     Future<Position> locateUser() async {
     return Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
   }
-
+/// 사용자 위치 표시 하기
   getUserLocation() async {
     currentLocation = await locateUser();
     setState(() {
@@ -117,11 +118,11 @@ class _TotalState extends State<Total> {
 
   }
 
-
+/// 이게 저기 네모 박스 마커 만드는건데 이거 말고 클러스터링 하는 부분처럼 바꿀까 하는 부분
   void setCustomMarker(addr) async{
     markerIcon = await getBytesFromCanvas(300, 100, addr);
   }
-
+/// 마커 처음 찍어주는 부분
   void _setMyLocation(latitude, longtitude, Addr) {
     var _latitude = latitude;
     var _longtitude = longtitude;
@@ -156,7 +157,7 @@ class _TotalState extends State<Total> {
   void _onMapCreated(GoogleMapController controller) {
     _controller.complete(controller);
   }
-
+/// 내가 위치 터치하면 옮겨 지는 부분
   _selectLocation(LatLng loc) async {
     setState(() {
       loading = true;
@@ -271,19 +272,19 @@ class _TotalState extends State<Total> {
           )),
     );
   }
-
+/// 현재 위치 기반 아파트 찾기
   void stateStterSearch() {
     setState(() {
       _search(currentLocation.latitude, currentLocation.longitude);
     });
   }
-
+/// 옮기 기반 위치 아파트 찾기
   void stateStterPointSearch() {
     setState(() {
       _pointSearch(selectedLocation.latitude, selectedLocation.longitude);
     });
   }
-
+/// 검색 통해서 나온 아파트들 마커 찍어주는 부분인데 여기가 아마 아이콘이 업데이트 안되는거 같어 변수는 잘들어가
   void _search(dynamic latitude, dynamic longtitude) async {
     setState(() {
       _markers.clear();
@@ -341,7 +342,7 @@ class _TotalState extends State<Total> {
       print('Fail to fetch place data');
     }
   }
-
+/// 위랑 똑같음
   void _pointSearch(dynamic latitude, dynamic longtitude) async {
     var _latitude = latitude;
     var _longtitude = longtitude;
