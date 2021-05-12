@@ -8,6 +8,7 @@ import 'package:app_bar_menu/map/map_pick.dart';
 import 'package:fluster/fluster.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:uuid/uuid.dart';
@@ -19,7 +20,9 @@ import 'package:http/http.dart' as http;
 import 'package:app_bar_menu/constants/constants.dart';
 import 'package:app_bar_menu/map_support/map_marker.dart';
 
-import 'map_support/map_marker_cluster.dart';
+import 'map_cluster/map_helper.dart';
+import 'map_cluster/map_marker_cluster.dart';
+
 
 
 
@@ -49,9 +52,47 @@ class _TotalState extends State<Total> {
 
   Uint8List markerIcon;
 
-
-  final TextEditingController _searchController = TextEditingController();
   LatLng position;
+
+  bool _areMarkersLoading = true;
+
+  double _currentZoom = 15;
+
+  final int _minClusterZoom = 0;
+  final int _maxClusterZoom = 19;
+  Fluster<MapMarker> _clusterManager;
+  final Color _clusterColor = Colors.brown;
+  final Color _clusterTextColor = Colors.deepOrange;
+
+
+
+  Future<void> _updateMarkers([double updatedZoom]) async {
+    if (_clusterManager == null || updatedZoom == _currentZoom) return;
+
+    if (updatedZoom != null) {
+      _currentZoom = updatedZoom;
+    }
+
+    setState(() {
+      _areMarkersLoading = true;
+    });
+
+    final updatedMarkers = await MapHelper.getClusterMarkers(
+      _clusterManager,
+      _currentZoom,
+      _clusterColor,
+      _clusterTextColor,
+      80,
+    );
+
+    _markers
+      ..clear()
+      ..addAll(updatedMarkers);
+
+    setState(() {
+      _areMarkersLoading = false;
+    });
+  }
 
 
   final tcontroller = TextEditingController();
@@ -85,7 +126,8 @@ class _TotalState extends State<Total> {
     var _latitude = latitude;
     var _longtitude = longtitude;
 
-    setState(() {
+
+    setState(() async {
       _markers.add(Marker(
         markerId: MarkerId('myInitialPostion'),
         position: LatLng(_latitude, _longtitude),
@@ -93,9 +135,13 @@ class _TotalState extends State<Total> {
         onTap:(){} ,
         infoWindow: InfoWindow(title: '나의 위치', snippet: Addr, ),
       ));
+
     });
 
+
+
   }
+
 
   @override
   void initState() {
@@ -168,12 +214,13 @@ class _TotalState extends State<Total> {
                 child: GoogleMap(
                   onTap: _selectLocation,
                   initialCameraPosition:
-                  CameraPosition(target: _center, zoom: 16),
+                  CameraPosition(target: _center, zoom: _currentZoom),
                   mapType: MapType.normal,
                   onMapCreated: _onMapCreated,
                   myLocationEnabled: true,
                   zoomGesturesEnabled: true,
                   markers: _markers,
+                  onCameraMove: (position) => _updateMarkers(position.zoom),
                 ),
               ),
               Container(
@@ -281,12 +328,12 @@ class _TotalState extends State<Total> {
                 ),
                 onTap: (){
 
-                  showAlertDialog(context, _latitude,_longtitude);
-
                 }
               ),
             );
           }
+
+
           loading = false;
         });
       }
@@ -331,7 +378,6 @@ class _TotalState extends State<Total> {
                   snippet: foundPlaces[i]['vicinity'],
                 ),
                       onTap: (){
-                  showAlertDialog(context,_latitude,_longtitude);
 
                       }
               ),
@@ -346,76 +392,7 @@ class _TotalState extends State<Total> {
   }
 }
 
-void showAlertDialog(BuildContext context,_latitude, _longtitude) async {
-  String result = await showDialog(
-    context: context,
-    barrierDismissible: false, // user must tap button!
-    builder: (BuildContext context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(20.0))
-        ),
-        titlePadding: EdgeInsets.fromLTRB(25, 30, 5, 5),
-        backgroundColor: Colors.brown,
-        title: Text('즐겨찾기로 등록하시겠습니까?', style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.deepOrange)),
-        actions: <Widget>[
-          FlatButton(
-            child: Text('OK', style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.deepOrange)),
-            onPressed: () {
-                  () => Navigator.of(context).pop({
-                'latitude': _latitude,
-                'longitude': _longtitude,
-              });
-
-            },
-          ),
-          FlatButton(
-            child: Text('Cancel', style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.deepOrange)),
-            onPressed: () {
-              Navigator.pop(context, "Cancel");
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
 
 
-final Fluster<MapMarker> fluster = Fluster<MapMarker>(
-  minZoom: minZoom, // The min zoom at clusters will show
-  maxZoom: maxZoom, // The max zoom at clusters will show
-  radius: 150, // Cluster radius in pixels
-  extent: 2048, // Tile extent. Radius is calculated with it.
-  nodeSize: 64, // Size of the KD-tree leaf node.
-  points: markers, // The list of markers created before
-  createCluster: ( // Create cluster marker
-      BaseCluster cluster,
-      double lng,
-      double lat,
-      ) => MapMarker(
-    id: cluster.id.toString(),
-    position: LatLng(lat, lng),
-    icon: clusterImage,
-    isCluster: cluster.isCluster,
-    clusterId: cluster.id,
-    pointsSize: cluster.pointsSize,
-    childMarkerId: cluster.childMarkerId,
-  ),
-);
-
-final List<Marker> googleMarkers = fluster
-    .clusters([-180, -85, 180, 85], currentZoom)
-    .map((cluster) => cluster.toMarker())
-    .toList()
 
 
