@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui'as ui;
 import 'dart:ui';
 
 import 'package:fluster/fluster.dart';
@@ -184,4 +185,32 @@ class MapHelper {
       return mapMarker.toMarker();
     }).toList());
   }
+
+  Future<Uint8List> getBytesFromCanvas(int width, int height,var addr) async {
+    ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    Canvas canvas = Canvas(pictureRecorder);
+    Paint paint = Paint()..color = Colors.brown;
+    Radius radius = Radius.circular(20.0);
+    canvas.drawRRect(
+        RRect.fromRectAndCorners(
+          Rect.fromLTWH(0.0, 0.0, width.toDouble(), height.toDouble()),
+          topLeft: radius,
+          topRight: radius,
+          bottomLeft: radius,
+          bottomRight: radius,
+        ),
+        paint);
+    TextPainter painter = TextPainter(textDirection: TextDirection.ltr);
+    painter.text = TextSpan(
+      text: addr,
+      style: TextStyle(fontSize: 25.0, color: Colors.yellow),
+    );
+    painter.layout();
+    painter.paint(canvas, Offset((width * 0.5) - painter.width * 0.5, (height * 0.5) - painter.height * 0.5));
+    final img = await pictureRecorder.endRecording().toImage(width, height);
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    return data.buffer.asUint8List();
+  }
+
+
 }

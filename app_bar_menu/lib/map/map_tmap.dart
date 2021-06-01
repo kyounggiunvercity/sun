@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:app_bar_menu/map_support/google_map_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
-import 'map_pick.dart';
 
 
-void main() => runApp(Tmap());
 
 class Tmap extends StatefulWidget {
   @override
@@ -38,7 +37,7 @@ class _TmapState extends State<Tmap> {
     setState(() {
       _center = LatLng(currentLocation.latitude, currentLocation.longitude);
     });
-    myAddr = await getAddrFromLocation(
+    myAddr = await GoogleMapServices.getAddrFromLocation(
         currentLocation.latitude, currentLocation.longitude);
     _setMyLocation(currentLocation.latitude, currentLocation.longitude);
   }
@@ -61,10 +60,6 @@ class _TmapState extends State<Tmap> {
     // TODO: implement initState
     super.initState();
     getUserLocation();
-    _markers.add(Marker(
-        markerId: MarkerId('myInitialPostion'),
-        position: _center != null ? _center : LatLng(37.298456, 127.030481),
-        infoWindow: InfoWindow(title: 'My Position', snippet: 'Where am I?')));
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -76,25 +71,14 @@ class _TmapState extends State<Tmap> {
       loading = true;
       _setMyLocation(loc.latitude, loc.longitude);
     });
-    selectedAddress = await getAddrFromLocation(loc.latitude, loc.longitude);
+    selectedAddress = await GoogleMapServices.getAddrFromLocation(loc.latitude, loc.longitude);
     setState(() {
       loading = false;
       selectedLocation = loc;
     });
   }
 
-  static Future<String> getAddrFromLocation(double lat, double lng) async {
-    final String baseUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
-    String url =
-        '$baseUrl?latlng=$lat,$lng&key=AIzaSyBjJS0R3g8LUziS9ucwWHmgQr4wXJvIXio&language=ko';
 
-    final http.Response response = await http.get(Uri.parse(url));
-    final responseData = json.decode(response.body);
-    final formattedAddr = responseData['results'][0]['formatted_address'];
-    print(formattedAddr);
-
-    return formattedAddr;
-  }
 
   final tcontroller = TextEditingController();
   Widget appBarTitle = new Text("map");
@@ -126,9 +110,6 @@ class _TmapState extends State<Tmap> {
                 icon: const Icon(Icons.star),
                 tooltip: 'favorite',
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => PickLocation()));
-
                 },
               )]),
           body: Stack(
@@ -301,90 +282,4 @@ class _TmapState extends State<Tmap> {
   }
 }
 
-Mget() {
-  Future<List> getSuggestions(String query) async {
-    final String baseUrl =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json';
-    String type = 'establishment';
-    String url =
-        '$baseUrl?input=$query&key=AIzaSyBjJS0R3g8LUziS9ucwWHmgQr4wXJvIXio&type=$type&language=ko&components=country:kr';
 
-    final http.Response response = await http.get(Uri.parse(url));
-    final responseData = json.decode(response.body);
-    final predictions = responseData['predictions'];
-
-    List<Place> suggestions = [];
-
-    for (int i = 0; i < predictions.length; i++) {
-      final place = Place.fromJson(predictions[i]);
-      suggestions.add(place);
-    }
-  }
-}
-
-class Place {
-  final String description;
-  final String placeId;
-
-  Place({this.description, this.placeId});
-
-  Place.fromJson(Map<String, dynamic> json)
-      : this.description = json['description'],
-        this.placeId = json['place_id'];
-
-  Map<String, dynamic> toMap() {
-    return {
-      'description': this.description,
-      'placeId': this.placeId,
-    };
-  }
-}
-
-class PlaceDetail {
-  final String placeId;
-  final String formattedAddress;
-  final String formattedPhoneNumber;
-  final String name;
-  final double rating;
-  final String vicinity;
-  final String website;
-  final double lat;
-  final double lng;
-
-  PlaceDetail({
-    this.placeId,
-    this.formattedAddress,
-    this.formattedPhoneNumber,
-    this.name,
-    this.rating,
-    this.vicinity,
-    this.website = '',
-    this.lat,
-    this.lng,
-  });
-
-  PlaceDetail.fromJson(Map<String, dynamic> json)
-      : this.placeId = json['place_id'],
-        this.formattedAddress = json['formatted_address'],
-        this.formattedPhoneNumber = json['formatted_phone_number'],
-        this.name = json['name'],
-        this.rating = json['rating'].toDouble(),
-        this.vicinity = json['vicinity'],
-        this.website = json['website'] ?? '',
-        this.lat = json['geometry']['location']['lat'],
-        this.lng = json['geometry']['location']['lng'];
-
-  Map<String, dynamic> toMap() {
-    return {
-      'placeId': this.placeId,
-      'formateedAddress': this.formattedAddress,
-      'formateedPhoneNumber': this.formattedPhoneNumber,
-      'name': this.name,
-      'rating': this.rating,
-      'vicinity': this.vicinity,
-      'website': this.website,
-      'lat': this.lat,
-      'lng': this.lng,
-    };
-  }
-}

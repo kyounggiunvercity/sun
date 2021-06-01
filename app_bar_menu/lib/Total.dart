@@ -1,70 +1,140 @@
+
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
-import 'package:app_bar_menu/map/map_important_location.dart';
-import 'package:app_bar_menu/map/map_pick.dart';
 import 'package:fluster/fluster.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:uuid/uuid.dart';
-import 'dart:async';
-import 'package:geolocator/geolocator.dart';
-import 'package:app_bar_menu/map_support/google_map_service.dart';
-import 'package:app_bar_menu/map_support/place.dart';
-import 'package:http/http.dart' as http;
-import 'package:app_bar_menu/constants/constants.dart';
-import 'package:app_bar_menu/map_support/map_marker.dart';
 
+import 'constants/constants.dart';
 import 'map_cluster/map_helper.dart';
 import 'map_cluster/map_marker_cluster.dart';
+import 'map_support/google_map_service.dart';
+import 'map_support/map_marker.dart';
+import 'package:http/http.dart' as http;
 
 
 
-
-
-class Total extends StatefulWidget {
+class Main extends StatefulWidget {
   @override
-  _TotalState createState() => _TotalState();
+  _MainState createState() => _MainState();
 }
 
-class _TotalState extends State<Total> {
+class _MainState extends State<Main> {
 
-  var uuid = Uuid();
-  var sessionToken;
-  var googleMapServices;
-  PlaceDetail placeDetail;
   Completer<GoogleMapController> _controller = Completer();
+  /// 마커들의 모음 클러스터 마커 까지 포함
   Set<Marker> _markers = Set();
-
+  /// 사용자의 위치
   LatLng _center;
   Position currentLocation;
-  double distance = 0.0;
   String myAddr = '';
 
-  bool loading = false;
+  /// 선택된 위치
   LatLng selectedLocation;
   String selectedAddress;
 
-  Uint8List markerIcon;
 
-  LatLng position;
-  /// 여기 부터 클러스터링 변수들
-  bool _areMarkersLoading = true;
-
+  /// 지도 loading 초기화
+  bool loading = false;
+  /// 지도 처음 줌 level
   double _currentZoom = 15;
 
-  final int _minClusterZoom = 0;
-  final int _maxClusterZoom = 19;
+
+  /// 마커 아이콘 변수
+  Uint8List markerIcon;
+
+
+  /// Minimum zoom at which the markers will cluster
+  int _minClusterZoom = 0;
+  /// Maximum zoom at which the markers will cluster
+  int _maxClusterZoom = 19;
+  /// Color of the cluster circle
+  Color _clusterColor = Colors.blue;
+
+  /// Color of the cluster text
+  Color _clusterTextColor = Colors.white;
+  /// 클러스터 manager
   Fluster<MapMarker> _clusterManager;
-  final Color _clusterColor = Colors.brown;
-  final Color _clusterTextColor = Colors.deepOrange;
 
 
-  /// 여기가 클러스터링 부분 함
+  /// 사용자 위치 표시 하기
+  Future<Position> locateUser() async {
+    return Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+  }
+
+  getUserLocation() async {
+    currentLocation = await locateUser();
+    setState(() {
+      _center = LatLng(currentLocation.latitude, currentLocation.longitude);
+    });
+    myAddr = await GoogleMapServices.getAddrFromLocation(
+        currentLocation.latitude, currentLocation.longitude);
+    _setMyLocation(currentLocation.latitude, currentLocation.longitude, myAddr);
+  }
+
+  /// 먀커 커스터마이즈
+  void setCustomMarker(addr) async{
+    markerIcon = await getBytesFromCanvas(300, 100, addr);
+  }
+
+  /// 마커 처음 찍어주는 부분
+  void _setMyLocation(latitude, longtitude, Addr) {
+    var _latitude = latitude;
+    var _longtitude = longtitude;
+    setCustomMarker(Addr);
+    setState(() async {
+      _markers.add(Marker(
+        markerId: MarkerId('myInitialPostion'),
+        position: LatLng(_latitude, _longtitude),
+        icon: BitmapDescriptor.fromBytes(markerIcon),
+        onTap:(){} ,
+        infoWindow: InfoWindow(title: '나의 위치', snippet: Addr, ),
+      ));
+
+    });
+
+  }
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getUserLocation();
+
+  }
+
+
+  /// 구글 지도 컨트롤러 받아오고, 지도 로딩 & 마커 초기화
+  void _onMapCreated(GoogleMapController controller) {
+    _controller.complete(controller);
+  }
+
+
+
+  /// 내가 위치 터치하면 옮겨 지는 부분
+  _selectLocation(LatLng loc) async {
+
+    setState(() {
+      loading = true;
+      _setMyLocation(loc.latitude, loc.longitude, selectedAddress);
+    });
+    selectedAddress = await GoogleMapServices.getAddrFromLocation(loc.latitude, loc.longitude);
+    setState(() {
+      loading = false;
+      selectedLocation = loc;
+    });
+  }
+
+
+
+  /// 클러스터 마커 가져오기
   Future<void> _updateMarkers([double updatedZoom]) async {
     if (_clusterManager == null || updatedZoom == _currentZoom) return;
 
@@ -73,7 +143,7 @@ class _TotalState extends State<Total> {
     }
 
     setState(() {
-      _areMarkersLoading = true;
+      loading = true;
     });
 
     final updatedMarkers = await MapHelper.getClusterMarkers(
@@ -89,84 +159,12 @@ class _TotalState extends State<Total> {
       ..addAll(updatedMarkers);
 
     setState(() {
-      _areMarkersLoading = false;
-    });
-  }
-  ///수 여기 까지
-
-  final tcontroller = TextEditingController();
-  Widget appBarTitle = new Text("map");
-  Icon actionIcon = new Icon(Icons.search);
-
-  /// 사용자 위치 가져오기
-  Future<Position> locateUser() async {
-    return Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-  }
-  /// 사용자 위치 표시 하기
-  getUserLocation() async {
-    currentLocation = await locateUser();
-    setState(() {
-      _center = LatLng(currentLocation.latitude, currentLocation.longitude);
-    });
-    myAddr = await GoogleMapServices.getAddrFromLocation(
-        currentLocation.latitude, currentLocation.longitude);
-    _setMyLocation(currentLocation.latitude, currentLocation.longitude, myAddr);
-
-
-  }
-
-  /// 이게 저기 네모 박스 마커 만드는건데 이거 말고 클러스터링 하는 부분처럼 바꿀까 하는 부분
-  void setCustomMarker(addr) async{
-    markerIcon = await getBytesFromCanvas(300, 100, addr);
-  }
-  /// 마커 처음 찍어주는 부분
-  void _setMyLocation(latitude, longtitude, Addr) {
-    var _latitude = latitude;
-    var _longtitude = longtitude;
-
-
-    setState(() async {
-      _markers.add(Marker(
-        markerId: MarkerId('myInitialPostion'),
-        position: LatLng(_latitude, _longtitude),
-        icon: BitmapDescriptor.fromBytes(markerIcon),
-        onTap:(){} ,
-        infoWindow: InfoWindow(title: '나의 위치', snippet: Addr, ),
-      ));
-
-    });
-
-
-
-  }
-
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    setCustomMarker('내 위치');
-    getUserLocation();
-
-  }
-
-
-  void _onMapCreated(GoogleMapController controller) {
-    _controller.complete(controller);
-  }
-  /// 내가 위치 터치하면 옮겨 지는 부분
-  _selectLocation(LatLng loc) async {
-    setState(() {
-      loading = true;
-      _setMyLocation(loc.latitude, loc.longitude, selectedAddress);
-    });
-    selectedAddress = await GoogleMapServices.getAddrFromLocation(loc.latitude, loc.longitude);
-    setState(() {
       loading = false;
-      selectedLocation = loc;
     });
   }
+
+
+
 
 
   @override
@@ -175,21 +173,24 @@ class _TotalState extends State<Total> {
       home: Scaffold(
           backgroundColor: Colors.brown,
           appBar: AppBar(
-              title:    Text('1층, 반려동물, 등, 등',style: TextStyle(
+
+            /// 여기에 필터링 된 정보 띄우면 됨!!
+            ///
+              title: Text('1층, 반려동물, 등, 등',style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                   color: Colors.deepOrange
               ) ,),
               leading: TextButton(
                 onPressed: (){
-
-
                 },
                 child:  SizedBox(
                   height: 40,
                   width: 40,
+                  /// 검색 버튼 만들거면 iconbutton으로 수정 하면된다.
                   child: Icon(Icons.search,
-                    color: Colors.deepOrange,),
+                    color: Colors.deepOrange,
+                   ),
                 ),
 
               ),
@@ -199,9 +200,7 @@ class _TotalState extends State<Total> {
                   color: Colors.deepOrange,),
                 tooltip: 'favorite',
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => ImportantLocations()));
-
+                  /// 여기에 다가 즐겨찾기 페이지로 넘어가게 하면 됨
                 },
               )]),
           body: Stack(
@@ -219,7 +218,7 @@ class _TotalState extends State<Total> {
                   myLocationEnabled: true,
                   zoomGesturesEnabled: true,
                   markers: _markers,
-                  onCameraMove: (position) => _updateMarkers(position.zoom),
+
                 ),
               ),
               Container(
@@ -282,6 +281,7 @@ class _TotalState extends State<Total> {
       _pointSearch(selectedLocation.latitude, selectedLocation.longitude);
     });
   }
+
   /// 검색 통해서 나온 아파트들 마커 찍어주는 부분인데 여기가 아마 아이콘이 업데이트 안되는거 같어 변수는 잘들어가
   void _search(dynamic latitude, dynamic longtitude) async {
     setState(() {
@@ -298,6 +298,8 @@ class _TotalState extends State<Total> {
         '$baseUrl?key=$API_KEY&location=$_latitude,$_longtitude&keyword=$_places&radius=500&language=ko';
 
     final response = await http.get(Uri.parse(url));
+    final List<MapMarker> markers = [];
+
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -389,5 +391,8 @@ class _TotalState extends State<Total> {
       print('Fail to fetch place data');
     }
   }
+
+
 }
+
 

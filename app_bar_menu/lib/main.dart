@@ -8,6 +8,7 @@ import 'package:app_bar_menu/testing.dart';
 import 'package:flutter/material.dart';
 
 import 'package:app_bar_menu/map/map_tmap.dart';
+import 'Total.dart';
 import 'map/map_auto.dart';
 import 'map/map_important_location.dart';
 import 'map/map_view.dart';
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return
       MaterialApp(
-      home: Total()
+      home: Tmap()
     );
   }
 }
